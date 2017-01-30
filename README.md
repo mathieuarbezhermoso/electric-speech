@@ -19,6 +19,59 @@ All footage was recorded over 144 minutes at 4k 24fps on a Panasonic GH4, modifi
 Firtsly, we wanted to present a live streaming of the Ai performing but since the learning phase is separated from the performing phase on actual convolutional network solutions we didn't see any reasons to go that way and decided to present a recorded stream of a machine happening occured on 03/01/2017 at 5:17pm (Paris Time).
 
 
+## Software details
+
+Make sure you have installed the following required packages:
+
+* **Bazel** ([instructions](http://bazel.io/docs/install.html)).
+* **TensorFlow** r0.12 or greater ([instructions](https://www.tensorflow.org/versions/master/get_started/os_setup.html)).
+* **im2txt** ([instructions](https://github.com/tensorflow/models/tree/master/im2txt)).
+* **NumPy** ([instructions](http://www.scipy.org/install.html)).
+* **Natural Language Toolkit (NLTK)**:
+    * First install NLTK ([instructions](http://www.nltk.org/install.html)).
+    * Then install the NLTK data ([instructions](http://www.nltk.org/data.html)).
+* **ffmpeg** ([instructions](https://github.com/FFmpeg/FFmpeg).
+
+Then run :
+
+```shell
+$ ./train.sh
+```
+For initializing the initial training phase for the inception model.
+
+```shell
+$ ./train2.sh
+```
+For initializing the second training phase for the inception model.
+
+```shell
+$ ./eval.sh
+```
+For initializing the evaluation. You should run the evaluation script in a separate process. This will log evaluation
+metrics to TensorBoard which allows training progress to be monitored in
+real-time.
+
+Note that you may run out of memory if you run the evaluation script on the same
+GPU as the training script. You can run the command
+`export CUDA_VISIBLE_DEVICES=""` to force the evaluation script to run on CPU.
+If evaluation runs too slowly on CPU, you can decrease the value of
+`--num_eval_examples`.
+
+```shell
+$ ./tensorboard.sh
+```
+For running tensorboard.
+
+```shell
+$ ./caption.sh
+```
+For captioning an image.
+
+```shell
+$ ./translator.sh ${MODEL PATH} ${KEYFRAME_TEMP_FOLDER} ${.SRT OUTPUT PATH} ${VIDEO FILE PATH} ${MS COCO WORD_COUNT.TXT PATH}
+```
+For running the translation script which will take a video, extract each keyframe, caption them and generate a .srt file with the right time stamps. ${MODEL PATH} and ${KEYFRAME_TEMP_FOLDER} must be folders. ${.SRT OUTPUT PATH}, ${VIDEO FILE PATH} and ${MS COCO WORD_COUNT.TXT PATH} must be files.
+
 ##Credits
 
 ```
