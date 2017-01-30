@@ -108,8 +108,6 @@ stopped and restarted, the parameter values will be restored from the latest
 other words, the *Inception v3* checkpoint is only used in the 0-th global step
 (initialization) of training the *Show and Tell* model.
 
-## Training a Model
-
 ### Initial Training
 
 For initializing the initial training phase for the inception model, you can manually run the training script :
@@ -233,6 +231,8 @@ Or automatically doing it by using :
 ```shell
 $ ./caption.sh
 ```
+
+### Using im2txt and the inception_v3 model on videos
 
 For running the translation script which will take a video, extract each keyframe, caption them and generate a .srt file with the right time stamps. ${MODEL PATH} and ${KEYFRAME_TEMP_FOLDER} must be folders. ${.SRT OUTPUT PATH}, ${VIDEO FILE PATH} and ${MS COCO WORD_COUNT.TXT PATH} must be files, you'll have to use :
 
