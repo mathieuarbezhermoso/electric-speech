@@ -16,7 +16,7 @@ In the early begining, we used [Andrej Karpathy's torch implementation](https://
 
 All footage was recorded over 144 minutes at 4k 24fps on a Panasonic GH4, modified with a [Sigma 24-70mm lens](http://www.the-digital-picture.com/Reviews/Sigma-24-70mm-f-2.8-EX-DG-Lens-Review.aspx). The European version of the GH4 outputs short videos (30 minutes) that are then stripped of audio and concatenated with `ffmpeg`. Before being concatenated the videos are copied to a temporary folder on the internal SSD which changes the processing time from days to minutes. All sequences are then edited, color graded and exported into h264. We're using `ffprobe` and `ffmpeg` to extract keyframes and its related time stamps and send it to `im2txt` which generates text English translation for each image. Finally, the videos and captions are uploaded to YouTube, which will handles the streaming and buffering for the [online version](http://01032017.net/).
 
-Firtsly, we wanted to present a live streaming of the Ai performing but since the learning phase is separated from the performing phase on actual convolutional network solutions we didn't see any reasons to go that way and decided to present a recorded stream of a machine happening occured on 03/01/2017 at 5:17pm (Paris Time).
+Firtsly, we wanted to present a live streaming of the Ai performing but since the learning phase is separated from the performing phase on actual neural network solutions we didn't see any reasons to go that way and decided to present a recorded stream of a machine happening occured on 03/01/2017 at 5:17pm (Paris Time).
 
 
 ## Software details
