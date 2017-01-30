@@ -21,6 +21,8 @@ Firtsly, we wanted to present a live streaming of the Ai performing but since th
 
 ## Software details
 
+### Install Required Packages
+
 Make sure you have installed the following required packages:
 
 * **Bazel** ([instructions](http://bazel.io/docs/install.html)).
@@ -32,22 +34,152 @@ Make sure you have installed the following required packages:
     * Then install the NLTK data ([instructions](http://www.nltk.org/data.html)).
 * **ffmpeg** ([instructions](https://github.com/FFmpeg/FFmpeg).
 
-Then run :
+### Prepare the Training Data
+
+To train the model you will need to provide training data in native TFRecord
+format. The TFRecord format consists of a set of sharded files containing
+serialized `tf.SequenceExample` protocol buffers. Each `tf.SequenceExample`
+proto contains an image (JPEG format), a caption and metadata such as the image
+id.
+
+Each caption is a list of words. During preprocessing, a dictionary is created
+that assigns each word in the vocabulary to an integer-valued id. Each caption
+is encoded as a list of integer word ids in the `tf.SequenceExample` protos.
+
+Google Brain team provided a script to download and preprocess the [MSCOCO]
+(http://mscoco.org/) image captioning data set into this format. Downloading
+and preprocessing the data may take several hours depending on your network and
+computer speed.
+
+Before running the script, ensure that your hard disk has at least 150GB of
+available space for storing the downloaded and processed data.
+
+```shell
+# Location to save the MSCOCO data.
+MSCOCO_DIR="${HOME}/im2txt/data/mscoco"
+
+# Build the preprocessing script.
+bazel build im2txt/download_and_preprocess_mscoco
+
+# Run the preprocessing script.
+bazel-bin/im2txt/download_and_preprocess_mscoco "${MSCOCO_DIR}"
+```
+
+The final line of the output should read:
+
+```
+2016-09-01 16:47:47.296630: Finished processing all 20267 image-caption pairs in data set 'test'.
+```
+
+When the script finishes you will find 256 training, 4 validation and 8 testing
+files in `DATA_DIR`. The files will match the patterns `train-?????-of-00256`,
+`val-?????-of-00004` and `test-?????-of-00008`, respectively.
+
+### Download the Inception v3 Checkpoint
+
+The *Show and Tell* model requires a pretrained *Inception v3* checkpoint file
+to initialize the parameters of its image encoder submodel.
+
+This checkpoint file is provided by the
+[TensorFlow-Slim image classification library](https://github.com/tensorflow/models/tree/master/slim#tensorflow-slim-image-classification-library)
+which provides a suite of pre-trained image classification models. You can read
+more about the models provided by the library
+[here](https://github.com/tensorflow/models/tree/master/slim#pre-trained-models).
+
+
+Run the following commands to download the *Inception v3* checkpoint.
+
+```shell
+# Location to save the Inception v3 checkpoint.
+INCEPTION_DIR="${HOME}/im2txt/data"
+mkdir -p ${INCEPTION_DIR}
+
+wget "http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz"
+tar -xvf "inception_v3_2016_08_28.tar.gz" -C ${INCEPTION_DIR}
+rm "inception_v3_2016_08_28.tar.gz"
+```
+
+Note that the *Inception v3* checkpoint will only be used for initializing the
+parameters of the *Show and Tell* model. Once the *Show and Tell* model starts
+training it will save its own checkpoint files containing the values of all its
+parameters (including copies of the *Inception v3* parameters). If training is
+stopped and restarted, the parameter values will be restored from the latest
+*Show and Tell* checkpoint and the *Inception v3* checkpoint will be ignored. In
+other words, the *Inception v3* checkpoint is only used in the 0-th global step
+(initialization) of training the *Show and Tell* model.
+
+## Training a Model
+
+### Initial Training
+
+For initializing the initial training phase for the inception model, you can manually run the training script :
+
+```shell
+# Directory containing preprocessed MSCOCO data.
+MSCOCO_DIR="${HOME}/im2txt/data/mscoco"
+
+# Inception v3 checkpoint file.
+INCEPTION_CHECKPOINT="${HOME}/im2txt/data/inception_v3.ckpt"
+
+# Directory to save the model.
+MODEL_DIR="${HOME}/im2txt/model"
+
+# Build the model.
+bazel build -c opt im2txt/...
+
+# Run the training script.
+bazel-bin/im2txt/train \
+  --input_file_pattern="${MSCOCO_DIR}/train-?????-of-00256" \
+  --inception_checkpoint_file="${INCEPTION_CHECKPOINT}" \
+  --train_dir="${MODEL_DIR}/train" \
+  --train_inception=false \
+  --number_of_steps=1000000
+```
+Or automatically doing it by using :
 
 ```shell
 $ ./train.sh
 ```
-For initializing the initial training phase for the inception model.
+For initializing the second training phase for the inception model, you can manually run the training script :
+
+```shell
+# Restart the training script with --train_inception=true.
+bazel-bin/im2txt/train \
+  --input_file_pattern="${MSCOCO_DIR}/train-?????-of-00256" \
+  --train_dir="${MODEL_DIR}/train" \
+  --train_inception=true \
+  --number_of_steps=3000000  # Additional 2M steps (assuming 1M in initial training).
+```
+
+Or automatically doing it by using :
 
 ```shell
 $ ./train2.sh
 ```
-For initializing the second training phase for the inception model.
+
+For initializing the evaluation, you can manually run the eval script :
+
+```shell
+MSCOCO_DIR="${HOME}/im2txt/data/mscoco"
+MODEL_DIR="${HOME}/im2txt/model"
+
+# Ignore GPU devices (only necessary if your GPU is currently memory
+# constrained, for example, by running the training script).
+export CUDA_VISIBLE_DEVICES=""
+
+# Run the evaluation script. This will run in a loop, periodically loading the
+# latest model checkpoint file and computing evaluation metrics.
+bazel-bin/im2txt/evaluate \
+  --input_file_pattern="${MSCOCO_DIR}/val-?????-of-00004" \
+  --checkpoint_dir="${MODEL_DIR}/train" \
+  --eval_dir="${MODEL_DIR}/eval"
+```
+Or automatically doing it by using :
 
 ```shell
 $ ./eval.sh
 ```
-For initializing the evaluation. You should run the evaluation script in a separate process. This will log evaluation
+You should run the evaluation script in a separate process. This will log evaluation
 metrics to TensorBoard which allows training progress to be monitored in
 real-time.
 
@@ -57,20 +189,56 @@ GPU as the training script. You can run the command
 If evaluation runs too slowly on CPU, you can decrease the value of
 `--num_eval_examples`.
 
+For running tensorboard, you can manually run the training script :
+
+```shell
+MODEL_DIR="${HOME}/im2txt/model"
+
+# Run a TensorBoard server.
+tensorboard --logdir="${MODEL_DIR}"
+```
+Or automatically doing it by using :
+
 ```shell
 $ ./tensorboard.sh
 ```
-For running tensorboard.
+For captioning an image, you can manually run the caption script :
+
+```shell
+# Directory containing model checkpoints.
+CHECKPOINT_DIR="${HOME}/im2txt/model/train"
+
+# Vocabulary file generated by the preprocessing script.
+VOCAB_FILE="${HOME}/im2txt/data/mscoco/word_counts.txt"
+
+# JPEG image file to caption.
+IMAGE_FILE="${HOME}/im2txt/data/mscoco/raw-data/val2014/COCO_val2014_000000224477.jpg"
+
+# Build the inference binary.
+bazel build -c opt im2txt/run_inference
+
+# Ignore GPU devices (only necessary if your GPU is currently memory
+# constrained, for example, by running the training script).
+export CUDA_VISIBLE_DEVICES=""
+
+# Run inference to generate captions.
+bazel-bin/im2txt/run_inference \
+  --checkpoint_path=${CHECKPOINT_DIR} \
+  --vocab_file=${VOCAB_FILE} \
+  --input_files=${IMAGE_FILE}
+```
+
+Or automatically doing it by using :
 
 ```shell
 $ ./caption.sh
 ```
-For captioning an image.
+
+For running the translation script which will take a video, extract each keyframe, caption them and generate a .srt file with the right time stamps. ${MODEL PATH} and ${KEYFRAME_TEMP_FOLDER} must be folders. ${.SRT OUTPUT PATH}, ${VIDEO FILE PATH} and ${MS COCO WORD_COUNT.TXT PATH} must be files, you'll have to use :
 
 ```shell
 $ ./translator.sh ${MODEL PATH} ${KEYFRAME_TEMP_FOLDER} ${.SRT OUTPUT PATH} ${VIDEO FILE PATH} ${MS COCO WORD_COUNT.TXT PATH}
 ```
-For running the translation script which will take a video, extract each keyframe, caption them and generate a .srt file with the right time stamps. ${MODEL PATH} and ${KEYFRAME_TEMP_FOLDER} must be folders. ${.SRT OUTPUT PATH}, ${VIDEO FILE PATH} and ${MS COCO WORD_COUNT.TXT PATH} must be files.
 
 ##Credits
 
