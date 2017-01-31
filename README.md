@@ -32,7 +32,7 @@ Make sure you have installed the following required packages:
 * **Natural Language Toolkit (NLTK)**:
     * First install NLTK ([instructions](http://www.nltk.org/install.html)).
     * Then install the NLTK data ([instructions](http://www.nltk.org/data.html)).
-* **ffmpeg** ([instructions](https://github.com/FFmpeg/FFmpeg).
+* **ffmpeg** ([instructions])(https://github.com/FFmpeg/FFmpeg).
 
 ### Prepare the Training Data
 
@@ -232,7 +232,7 @@ Or automatically doing it by using :
 $ ./caption.sh
 ```
 
-### Using im2txt and the inception_v3 model on videos
+### Using im2txt and the Inception v3 model on videos
 
 For running the translation script which will take a video, extract each keyframe, caption them and generate a .srt file with the right time stamps. ${MODEL PATH} and ${KEYFRAME_TEMP_FOLDER} must be folders. ${.SRT OUTPUT PATH}, ${VIDEO FILE PATH} and ${MS COCO WORD_COUNT.TXT PATH} must be files, you'll have to use :
 
