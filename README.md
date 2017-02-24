@@ -1,5 +1,5 @@
 # Electric speech
-[<i>Electric speech</i>](http://01032017.pysgs.net/) is a clouds reading machine which translate abstract cloudy shapes into a proper english. It's a part of an ongoing speculative transmedia documentary started in respublica Tuva in 2015 and it’s also a web publishing and the remain of one of the first machine happening. 
+[<i>Electric speech</i>](http://01032017.pysgs.net/) is a clouds reading machine which is able to translate abstract cloudy shapes into a proper english. It's a part of an ongoing speculative transmedia documentary started in respublica Tuva in 2015 and it’s also a web publishing and the remain of one of the first machine happening. 
 
 Inspired by both <i>Do android dream of electric sheep?</i> from Philip K. Dick and the relationship between datas, speeches and images in politic and contemporary mass medias as defined by Adam Curtis in [<i>Hypernormalisation</i>](https://www.youtube.com/watch?v=yEKC_B1mLL0) as a part of a risks management system initiated with Aladdin, a super computer dedicated to the risk management division of the world largest investment management corporation, [<i>BlackRock, Inc.</i>](https://www.blackrock.com/) <i>Electric speech</i> is attempting to turn a useful system, which is used to shape our financial and digital realities, into a poietic counter-system.
 
